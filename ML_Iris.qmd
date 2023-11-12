@@ -1,0 +1,207 @@
+---
+title: "Iris_Machine_Learning_Project"
+author: "Abhinav_Maheshwaram"
+format: html
+editor: visual
+---
+
+# Machine Learning with Iris Dataset
+
+## **Introduction:**
+
+The Iris Machine Learning Project focuses on exploring different algorithms to analyze the Iris dataset. This report delves into the data exploration, transformation, and analysis phases, comparing linear regression, polynomial regression, and a random forest model.
+
+## Data Exploration
+
+Loading Necessary libraries
+
+```{r}
+library(ggplot2) # Data visualization
+library(plotly) # Interactive data visualizations
+library(psych) # Correlation visualizations
+library(rattle) # Graphing decision trees
+library(caret) # Machine learning
+library(GGally) # Exploratory data analysis
+library(caTools) # Data splitting
+library(dplyr) # Data manipulation
+library(caret) # Streamlining machine learning processes
+library(e1071) # Additional machine learning support
+```
+
+Iris is an inbuilt data set with R. We will be using Iris data set to analyze linear regression model
+
+First step is to load the Iris Dataset
+
+```{r}
+data("iris")
+```
+
+To have a look at the data, There are several options to do so.
+
+We can simply use head command to see the number of fields
+
+```{r}
+head(iris)
+```
+
+### Correlation Analysis:
+
+```{r}
+ggpairs(iris, aes(color = Species))
+```
+
+The correlation between the variables is displayed in the upper section of the correlation matrix. All variables, with the exception of sepal length and width, have moderate to strong correlations. The bottom half of the matrix, which uses colors to split the data points by iris species, also provides us with further information about the scatter plots of these correlations. This enables us to observe the species-specific clusters that exist.
+
+## Data Transformation
+
+**`set.seed()`** function is used to set the seed for the random number generator. The random number generator in R is based on an initial seed value, and setting the seed ensures reproducibility of random processes.
+
+```{r}
+set.seed(200)
+```
+
+Splitting data into training and test sets is crucial for evaluating a machine learning model's performance on new, unseen data, preventing overfitting, assessing generalization, tuning hyperparameters, and avoiding data leakage.
+
+```{r}
+split = sample.split(iris$Species, SplitRatio = 2/3)
+training_set = subset(iris, split == TRUE)
+test_set = subset(iris, split == FALSE)
+```
+
+```{r}
+model <- lm(Species ~ Petal.Length + Petal.Width, data = training_set)
+```
+
+```{r}
+summary(iris)
+```
+
+## Data Analysis:
+
+```{r}
+predictions <- predict(model, test_set)
+actual <- test_set$Species
+mse <- mean((predictions - actual)^2)
+rmse <- sqrt(mse)
+
+```
+
+```{r}
+ggplot(test_set, aes(x = Petal.Length, y = Petal.Width, color = Species)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x, color = "blue") +
+  labs(title = "Linear Regression for Iris Dataset",
+       x = "Petal Length",
+       y = "Petal Width")
+
+```
+
+```{r}
+# Create a scatter plot with linear regression line
+plot <- plot_ly(test_set, x = ~Petal.Length, y = ~Petal.Width, color = ~Species) %>%
+  add_markers() %>%
+  add_lines(type = "lm", line = list(color = "blue")) %>%
+  layout(title = "Linear Regression for Iris Dataset",
+         xaxis = list(title = "Petal Length"),
+         yaxis = list(title = "Petal Width"),
+         showlegend = TRUE)
+
+# Display the plot
+plot
+```
+
+#### Machine Learning Using Linear Regression Method:
+
+```{r}
+
+# Create and train the logistic regression model
+model <- glm(Species ~ Petal.Length + Petal.Width, data = training_set, family = binomial)
+
+# Predict the results on the testing set
+predicted <- predict(model, newdata = test_set, type = "response")
+
+# Convert predicted probabilities to predicted class labels
+predicted_class <- ifelse(predicted > 0.5, "versicolor", "setosa")
+
+# View the predicted class labels
+predicted_class
+
+# Calculate accuracy and confusion matrix
+actual_class <- test_set$Species
+accuracy <- mean(predicted_class == actual_class) * 100
+cat("Accuracy of the model is", round(accuracy, 2), "%\n")
+
+# Create the confusion matrix
+confusionMatrix(data = factor(predicted_class), reference = factor(actual_class))
+
+```
+
+#### Machine Learning Using Polynomial Regression Method:
+
+```{r}
+
+
+# Create and train the logistic regression model with polynomial terms
+model <- glm(Species ~ Petal.Length + Petal.Width + Petal.Length + Petal.Width, data = training_set, family = binomial)
+
+# Predict the results on the testing set
+predicted <- predict(model, newdata = test_set, type = "response")
+
+# Convert predicted probabilities to predicted class labels
+predicted_class <- ifelse(predicted > 0.5, "versicolor", "setosa")
+
+# View the predicted class labels
+predicted_class
+
+# Calculate accuracy and confusion matrix
+actual_class <- test_set$Species
+accuracy <- mean(predicted_class == actual_class) * 100
+cat("Accuracy of the polynomial logistic regression model is", round(accuracy, 2), "%\n")
+
+# Create the confusion matrix
+confusionMatrix(data = factor(predicted_class), reference = factor(actual_class))
+
+```
+
+#### Machine Learning Using Random Forest Method:
+
+```{r}
+library(randomForest)
+
+# Create and train the random forest model
+model_rf <- randomForest(Species ~ Petal.Length + Petal.Width, data = training_set)
+
+# Predict the results on the testing set
+predicted_rf <- predict(model_rf, newdata = test_set)
+
+# Calculate accuracy
+accuracy_rf <- mean(predicted_rf == actual_class) * 100
+cat("Accuracy of the random forest model is", round(accuracy_rf, 2), "%\n")
+
+```
+
+## Conclusion:
+
+**Linear and Polynomial Regression:**
+
+**1.** **Algorithm Suitability:** Linear and polynomial regression may not be suitable for the Iris dataset, which involves multi-class classification. They are typically used for regression tasks or binary classification.
+
+**2. Feature Representation:** The features chosen (Petal.Length and Petal.Width) might not capture the underlying patterns in the dataset effectively, leading to lower accuracy.
+
+**Random Forest:**
+
+**1. Algorithm Choice:** Random Forest, a more complex ensemble learning algorithm, outperformed linear and polynomial regression. It is better suited for multi-class classification tasks.
+
+**2. Ensemble Learning:** Random Forest combines multiple decision trees to improve accuracy and generalization. This ensemble approach proved effective in capturing complex relationships in the Iris dataset.
+
+**3. Hyperparameter Tuning:** The default parameters of the Random Forest model might have been well-suited for the Iris dataset, or hyperparameter tuning could have played a role in achieving the high accuracy.
+
+**Key Takeaways:**
+
+\- The choice of algorithm is crucial, and different algorithms perform differently on various datasets.
+
+\- Ensemble methods like Random Forest can handle complex relationships and provide better accuracy for certain tasks.
+
+\- Feature selection and engineering play a significant role in model performance.
+
+\- Experimentation and trying multiple algorithms are essential in finding the most suitable approach for a specific classification problem.
